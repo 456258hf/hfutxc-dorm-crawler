@@ -5,9 +5,9 @@ from bs4 import BeautifulSoup
 
 URL = 'http://39.106.82.121/query/getStudentScore'  # 请求地址
 GET = False  # 是否请求，True：请求数据并保存然后处理，False：读取保存的数据然后处理
-DELAY = 0.1  # 每次请求间隔时间
+DELAY = 0.1  # 每次请求间隔时间，单位秒
 
-BUILDING = "9N"  # 寝室楼栋，1~10+N/S/#
+BUILDING = "9N"  # 寝室楼栋，1~10+N/S/#，不区分大小写
 FLOOR = range(1, 7)  # 层号范围，默认为range(1, 7)
 ROOM = range(1, 37)  # 房间号范围，默认为range(1, 37)
 
@@ -48,7 +48,7 @@ def dorm_req(dorm: str) -> bool:  # 请求并保存获取的数据表格为htm�
 
 
 def dorm_dec(dorm: str) -> list:  # 解码保存的指定寝室的数据，返回指定日期以前的成绩
-    date_index = ['0']*WEEK_NUM*len(TERM_INDEX)
+    date_index = ['-1']*WEEK_NUM*len(TERM_INDEX)
     try:
         with open(f"{dorm}.htm", 'r') as f:
             html_content = f.read()
@@ -90,10 +90,10 @@ for floor in FLOOR:
                 continue
         score = dorm_dec(dorm)
         # 跳过空寝室
-        if all(item == '0' for item in score):
+        if all(item == '-1' for item in score):
             continue
         # 计算有效平均成绩
-        score_int = [int(num) for num in score if int(num)]
+        score_int = [int(num) for num in score if int(num) != -1]
         average = sum(score_int) / len(score_int)
         # 添加首尾列
         score.insert(0, dorm)
@@ -104,7 +104,7 @@ for floor in FLOOR:
 # 检查哪些列需要删除
 columns_to_delete = []
 for col_index in range(1, len(output[0])):
-    if all(row[col_index] == '0' for row in output[1:]):
+    if all(row[col_index] == '-1' for row in output[1:]):
         columns_to_delete.append(col_index)
 
 # 删除需要删除的列
