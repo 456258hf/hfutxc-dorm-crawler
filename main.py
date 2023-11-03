@@ -1,9 +1,10 @@
-import requests
+"""爬取 hfutxc 寝室卫生检查系统——查询宿舍床铺评分的数据"""
 import time
 import csv
+import requests
 from bs4 import BeautifulSoup
 
-URL = 'http://39.106.82.121/query/getStudentScore'  # 请求地址
+URL = "http://39.106.82.121/query/getStudentScore"  # 请求地址
 GET = False  # 是否请求，True：请求数据并保存然后处理，False：读取保存的数据然后处理
 DELAY = 0.1  # 每次请求间隔时间，单位秒
 
@@ -11,11 +12,12 @@ BUILDING = "9N"  # 寝室楼栋，1~10+N/S/#，不区分大小写
 FLOOR = range(1, 7)  # 层号范围，默认为range(1, 7)
 ROOM = range(1, 37)  # 房间号范围，默认为range(1, 37)
 
-TERM_INDEX = ((2023, 1),)  # 目标学期，单个学期需在tuple后打,
+TERM_INDEX = ((2023, 1),)  # 目标学期，格式为(年,学期序号)，单个学期需在tuple后打,
 WEEK_NUM = 20  # 学期的周数，默认为20
 
 
 def term_get(date: str) -> tuple:
+    """使用日期计算学期"""
     year = int(date[0:4])
     month = int(date[5:7])
     if month <= 2:
@@ -29,28 +31,33 @@ def term_get(date: str) -> tuple:
     return (year, term)
 
 
-def dorm_req(dorm: str) -> bool:  # 请求并保存获取的数据表格为htm文件，返回请求是否有效
+def dorm_req(dorm: str) -> bool:
+    """请求并保存获取的数据表格为htm文件，返回请求是否有效"""
     try:
-        response = requests.get(URL, params={'student_code': dorm})
+        response = requests.get(URL, params={"student_code": dorm}, timeout=10)
         response.encoding = "UTF-8"
-        if response.status_code == 200:
-            text = response.text
-            if text == '<tr><td colspan="5" align="center">无数据</td></tr>\n':
-                return False
-            with open(f"{dorm}.htm", 'w+') as f:
-                f.write(text)
-            return True
-        else:
+        if response.status_code != 200:  # http状态码异常
             print(f"Request {dorm} failed! Code: {response.status_code}")
-    except requests.RequestException as e:
+            return False
+        text = response.text
+        if text == '<tr><td colspan="5" align="center">无数据</td></tr>\n':  # 无数据则不保存
+            return False
+        with open(f"{dorm}.htm", 'w+', encoding='UTF-8') as f:
+            f.write(text)
+        return True
+    except requests.exceptions.Timeout:  # 超时
+        print(f"Request {dorm} timed out!")
+        return False
+    except requests.RequestException as e:  # 请求错误
         print(f"Request {dorm} failed! Error: {e}")
-    return False
+        return False
 
 
-def dorm_dec(dorm: str) -> list:  # 解码保存的指定寝室的数据，返回指定日期以前的成绩
-    date_index = ['-1']*WEEK_NUM*len(TERM_INDEX)
+def dorm_dec(dorm: str) -> list:
+    """解码保存的指定寝室的数据，返回指定日期以前的成绩"""
+    date_index = ["-1"]*WEEK_NUM*len(TERM_INDEX)
     try:
-        with open(f"{dorm}.htm", 'r') as f:
+        with open(f"{dorm}.htm", 'r', encoding='UTF-8') as f:
             html_content = f.read()
     except FileNotFoundError:
         return date_index
@@ -73,48 +80,55 @@ def dorm_dec(dorm: str) -> list:  # 解码保存的指定寝室的数据，返�
     return date_index
 
 
-head = ['寝室']
+def remove_empty_weeks(table: list) -> list:
+    """清理无数据周"""
+    columns_to_delete = []
+    for col_index in range(1, len(table[0])):
+        if all(row[col_index] == "-1" for row in table[1:]):
+            columns_to_delete.append(col_index)
+
+    for row in table:
+        for col_index in reversed(columns_to_delete):
+            del row[col_index]
+
+    return table
+
+
+# 生成表头
+head = ["寝室"]
 for column in range(len(TERM_INDEX)):
     for num in range(WEEK_NUM):
         head.append(str(num+1))
-head.append('平均成绩')
+head.append("平均成绩")
 output = [head]
 
-
+# 处理数据
 for floor in FLOOR:
     for room in ROOM:
-        dorm = f"{BUILDING}{floor}{room:02d}"
+        dorm_name = f"{BUILDING}{floor}{room:02d}"
         if GET:
             time.sleep(DELAY)
-            if not dorm_req(dorm):  # 这一步会请求成绩
+            if not dorm_req(dorm_name):  # 这一步会请求成绩
                 continue
-        score = dorm_dec(dorm)
+        score = dorm_dec(dorm_name)
         # 跳过空寝室
-        if all(item == '-1' for item in score):
+        if all(item == "-1" for item in score):
             continue
         # 计算有效平均成绩
         score_int = [int(num) for num in score if int(num) != -1]
         average = sum(score_int) / len(score_int)
         # 添加首尾列
-        score.insert(0, dorm)
-        score.append(f'{average:.2f}')
-        print(','.join(score))
+        score.insert(0, dorm_name)
+        score.append(f"{average:.2f}")
+        print(",".join(score))
         output.append(score)
 
-# 检查哪些列需要删除
-columns_to_delete = []
-for col_index in range(1, len(output[0])):
-    if all(row[col_index] == '-1' for row in output[1:]):
-        columns_to_delete.append(col_index)
-
-# 删除需要删除的列
-for col_index in reversed(columns_to_delete):
-    for row in output:
-        del row[col_index]
+# 清理无数据周
+output = remove_empty_weeks(output)
 
 # 保存csv
-with open('output.csv', 'w', newline='') as f:
-    writer = csv.writer(f)
+with open("output.csv", 'w', newline='', encoding='GBK') as outputfile:
+    writer = csv.writer(outputfile)
     writer.writerows(output)
 
 print(f"Done! #validate dorm:{len(output)-1} week:{len(output[0])-2}")
