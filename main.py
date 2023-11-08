@@ -12,13 +12,13 @@ BUILDING = "9N"  # 寝室楼栋，1~10+N/S/#，不区分大小写
 FLOOR = range(1, 7)  # 层号范围，默认为range(1, 7)
 ROOM = range(1, 37)  # 房间号范围，默认为range(1, 37)
 
-TERM_INDEX = ((2023, 1),)  # 目标学期，格式为(年,学期序号)，单个学期需在tuple后打,
+YEAR_TERM_INDEX = ((23, 1),)  # 目标学期，格式为(年,学期序号)，单个学期需在tuple后打,
 WEEK_NUM = 20  # 学期的周数，默认为20
 
 
-def term_get(date: str) -> tuple:
+def year_term_get(date: str) -> tuple:
     """使用日期计算学期"""
-    year = int(date[0:4])
+    year = int(date[2:4])
     month = int(date[5:7])
     if month <= 2:
         year -= 1
@@ -55,7 +55,7 @@ def dorm_req(dorm: str) -> bool:
 
 def dorm_dec(dorm: str) -> list:
     """解码保存的指定寝室的数据，返回指定日期以前的成绩"""
-    date_index = ["-1"]*WEEK_NUM*len(TERM_INDEX)
+    date_index = ["-1"]*WEEK_NUM*len(YEAR_TERM_INDEX)
     try:
         with open(f"{dorm}.htm", 'r', encoding='UTF-8') as f:
             html_content = f.read()
@@ -73,9 +73,9 @@ def dorm_dec(dorm: str) -> list:
         else:
             date = cols[2].text[:10]
 
-        term = term_get(date)
-        if term in TERM_INDEX:  # 判断是否为目标学期
-            pos = (int(cols[0].text)-1)+WEEK_NUM*TERM_INDEX.index(term)
+        term = year_term_get(date)
+        if term in YEAR_TERM_INDEX:  # 判断是否为目标学期
+            pos = (int(cols[0].text)-1)+WEEK_NUM*YEAR_TERM_INDEX.index(term)
             date_index[pos] = cols[1].text
     return date_index
 
@@ -96,7 +96,7 @@ def remove_empty_weeks(table: list) -> list:
 
 # 生成表头
 head = ["寝室"]
-for column in range(len(TERM_INDEX)):
+for column in range(len(YEAR_TERM_INDEX)):
     for num in range(WEEK_NUM):
         head.append(str(num+1))
 head.append("平均成绩")
@@ -125,10 +125,29 @@ for floor in FLOOR:
 
 # 清理无数据周
 output = remove_empty_weeks(output)
+WEEK_COUNT = len(output[0])-2
+
+# 从旧到新按照成绩排序
+head = output.pop(0)
+for i in range(0, WEEK_COUNT+1):
+    output.sort(key=lambda x, i=i: float(x[i+1]), reverse=True)
+output.insert(0, head)
+
+# 添加序号列
+for i, output_row in enumerate(output[1:], start=1):
+    output_row.insert(0, i)
+output[0].insert(0, "序号")
+
+# 生成输出文件名
+output_filename = f"{BUILDING}-"
+for year_term in YEAR_TERM_INDEX:
+    for item in year_term:
+        output_filename += f"{str(item)}-"
+output_filename += str(WEEK_COUNT)
 
 # 保存csv
-with open("output.csv", 'w', newline='', encoding='GBK') as outputfile:
-    writer = csv.writer(outputfile)
+with open(f"{output_filename}.csv", 'w', newline='', encoding='GBK') as output_file:
+    writer = csv.writer(output_file)
     writer.writerows(output)
 
-print(f"Done! #validate dorm:{len(output)-1} week:{len(output[0])-2}")
+print(f"Done! #validate dorm:{len(output)-1} week:{WEEK_COUNT}")
