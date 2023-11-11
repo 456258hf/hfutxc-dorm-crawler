@@ -3,6 +3,9 @@ import time
 import csv
 import requests
 from bs4 import BeautifulSoup
+from openpyxl import Workbook
+from openpyxl.styles import Font, Alignment
+from openpyxl.formatting.rule import ColorScaleRule
 
 URL = "http://39.106.82.121/query/getStudentScore"  # 请求地址
 GET = False  # 是否请求，True：请求数据并保存然后处理，False：读取保存的数据然后处理
@@ -36,13 +39,15 @@ def dorm_req(dorm: str) -> bool:
     try:
         response = requests.get(URL, params={"student_code": dorm}, timeout=10)
         response.encoding = "UTF-8"
-        if response.status_code != 200:  # http状态码异常
+        # http状态码异常
+        if response.status_code != 200:
             print(f"Request {dorm} failed! Code: {response.status_code}")
             return False
         text = response.text
-        if text == '<tr><td colspan="5" align="center">无数据</td></tr>\n':  # 无数据则不保存
+        # 无数据则不保存
+        if text == '<tr><td colspan="5" align="center">无数据</td></tr>\n':
             return False
-        with open(f"{dorm}.htm", 'w+', encoding='UTF-8') as f:
+        with open(f"{BUILDING}\\{dorm}.htm", 'w+', encoding='UTF-8') as f:
             f.write(text)
         return True
     except requests.exceptions.Timeout:  # 超时
@@ -57,7 +62,7 @@ def dorm_dec(dorm: str) -> list:
     """解码保存的指定寝室的数据，返回指定日期以前的成绩"""
     date_index = ["-1"]*WEEK_NUM*len(YEAR_TERM_INDEX)
     try:
-        with open(f"{dorm}.htm", 'r', encoding='UTF-8') as f:
+        with open(f"{BUILDING}\\{dorm}.htm", 'r', encoding='UTF-8') as f:
             html_content = f.read()
     except FileNotFoundError:
         return date_index
@@ -65,16 +70,17 @@ def dorm_dec(dorm: str) -> list:
     rows = soup.find_all('tr')
     for row in rows:
         cols = row.find_all('td')
-        if len(cols) != 5:  # 排除一次成绩（四行）中的非首行
+        # 排除一次成绩（四行）中的非首行，其宽1，首行宽5
+        if len(cols) != 5:
             continue
-
-        if cols[4].text != "--":  # 处理日期填入错误情况
+        # 处理日期填入错误情况
+        if cols[4].text != "--":
             date = cols[4].text
         else:
             date = cols[2].text[:10]
-
+        # 判断是否为目标学期
         term = year_term_get(date)
-        if term in YEAR_TERM_INDEX:  # 判断是否为目标学期
+        if term in YEAR_TERM_INDEX:
             pos = (int(cols[0].text)-1)+WEEK_NUM*YEAR_TERM_INDEX.index(term)
             date_index[pos] = cols[1].text
     return date_index
@@ -83,15 +89,27 @@ def dorm_dec(dorm: str) -> list:
 def remove_empty_weeks(table: list) -> list:
     """清理无数据周"""
     columns_to_delete = []
+    # 统计全无数据周
     for col_index in range(1, len(table[0])):
         if all(row[col_index] == "-1" for row in table[1:]):
             columns_to_delete.append(col_index)
-
+    # 清理无数据周
     for row in table:
         for col_index in reversed(columns_to_delete):
             del row[col_index]
 
     return table
+
+
+def col_to_excel(number):
+    """将整数转换为excel中列的字母序号"""
+    result = ""
+    while number > 0:
+        remainder = (number - 1) % 26
+        result = chr(ord('A') + remainder) + result
+        number = (number - 1) // 26
+
+    return result
 
 
 # 生成表头
@@ -126,6 +144,7 @@ for floor in FLOOR:
 # 清理无数据周
 output = remove_empty_weeks(output)
 WEEK_COUNT = len(output[0])-2
+DORM_COUNT = len(output)-1
 
 # 从旧到新按照成绩排序
 head = output.pop(0)
@@ -139,7 +158,7 @@ for i, output_row in enumerate(output[1:], start=1):
 output[0].insert(0, "序号")
 
 # 生成输出文件名
-output_filename = f"{BUILDING}-"
+output_filename = f"{BUILDING}-{DORM_COUNT}-"
 for year_term in YEAR_TERM_INDEX:
     for item in year_term:
         output_filename += f"{str(item)}-"
@@ -150,4 +169,45 @@ with open(f"{output_filename}.csv", 'w', newline='', encoding='GBK') as output_f
     writer = csv.writer(output_file)
     writer.writerows(output)
 
-print(f"Done! #validate dorm:{len(output)-1} week:{WEEK_COUNT}")
+
+# 创建Excel文件
+wb = Workbook()
+ws = wb.active
+# 将数据写入Excel文件
+for row_index, row_data in enumerate(output, start=1):
+    for col_index, value in enumerate(row_data, start=1):
+        try:
+            # 尝试将值转换为整数（成绩值）
+            cell_value = int(value)
+        except ValueError:
+            try:
+                # 尝试将值转换为浮点数（平均成绩值）
+                cell_value = float(value)
+            except ValueError:
+                # 如果都失败，保留原始值
+                cell_value = value
+        ws.cell(row=row_index, column=col_index, value=cell_value)
+# 给全表添加字体和单元格对齐属性
+for row in ws[f"A1:{col_to_excel(WEEK_COUNT+3)}{DORM_COUNT+1}"]:
+    for cell in row:
+        cell.font = Font(name="微软雅黑", size=12)
+        cell.alignment = Alignment(horizontal="center", vertical="center")
+# 给成绩值添加0的数字格式
+for row in ws[f"C2:{col_to_excel(WEEK_COUNT+2)}{DORM_COUNT+1}"]:
+    for cell in row:
+        cell.number_format = '0'
+# 给平均成绩值添加0.00的数字格式
+for row in ws[f"{col_to_excel(WEEK_COUNT+3)}2:{col_to_excel(WEEK_COUNT+3)}{DORM_COUNT+1}"]:
+    for cell in row:
+        cell.number_format = '0.00'
+# 给所有成绩值添加蓝-白-红的条件格式
+rule = ColorScaleRule(start_type='percentile', start_value=0, start_color='F8696B',
+                      mid_type='percentile', mid_value=50, mid_color='FCFCFF',
+                      end_type='percentile', end_value=100, end_color='5A8AC6')
+ws.conditional_formatting.add(
+    f"C2:{col_to_excel(WEEK_COUNT+3)}{DORM_COUNT+1}", rule)
+# 保存xlsx文件
+wb.save(f"{output_filename}.xlsx")
+wb.close()
+
+print(f"Done! #validate dorm:{DORM_COUNT} week:{WEEK_COUNT}")
