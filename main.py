@@ -13,7 +13,7 @@ DELAY = 0.1  # 每次请求间隔时间，单位秒
 
 BUILDING = "9N"  # 寝室楼栋，1~10+N/S/#，不区分大小写
 FLOOR = range(1, 7)  # 层号范围，默认为range(1, 7)
-ROOM = range(1, 37)  # 房间号范围，默认为range(1, 37)
+ROOM = range(1, 38)  # 房间号范围，默认为range(1, 38)
 
 YEAR_TERM_INDEX = ((23, 1),)  # 目标学期，格式为(年,学期序号)，单个学期需在tuple后打,
 WEEK_NUM = 20  # 学期的周数，默认为20
