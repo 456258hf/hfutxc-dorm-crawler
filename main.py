@@ -84,7 +84,7 @@ def dorm_dec(dorm: str) -> list:
         if term in YEAR_TERM_INDEX:
             week = int(cols[0].text)-1
             # 处理周数填入数值错误情况
-            if week > WEEK_NUM:
+            if week >= WEEK_NUM:
                 continue
             pos = week+WEEK_NUM*YEAR_TERM_INDEX.index(term)
             date_index[pos] = cols[1].text
