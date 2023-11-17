@@ -1,0 +1,80 @@
+"""根据存在的数据文件，统计寝室存在情况，生成寝室字典dorm_dict.py"""
+import os
+import time
+from openpyxl import Workbook
+from openpyxl.styles import Font, Alignment
+from openpyxl.formatting.rule import ColorScaleRule
+
+from main import dorm_req, col_to_excel
+
+URL = "http://39.106.82.121/query/getStudentScore"  # 请求地址
+GET = False  # 是否请求，True：请求数据并保存然后统计，False：读取保存的数据然后统计
+DELAY = 0.1  # 每次请求间隔时间，单位秒
+
+# 寝室楼栋，默认如下
+"""
+BUILDINGS = ["1N", "1S", "2N", "2S", "3S", "4N", "4S", "5N",
+            "5S", "6N", "6S", "7#", "8#", "9N", "9S", "10N", "10S"]
+"""
+BUILDINGS = ["1N", "1S", "2N", "2S", "3S", "4N", "4S", "5N",
+             "5S", "6N", "6S", "7#", "8#", "9N", "9S", "10N", "10S"]
+FLOORS = range(1, 7)  # 层号范围，默认为range(1, 7)
+ROOMS = range(1, 41)  # 房间号范围，默认为range(1, 41)
+
+# 创建空的寝室字典
+dorm_dict = {key: [] for key in BUILDINGS}
+
+# 创建Excel表格
+wb = Workbook()
+ws = wb.active
+
+# 生成首行并创建数据存放路径
+for building_index, building in enumerate(BUILDINGS):
+    if not os.path.exists(building):
+        os.makedirs(building)
+    col_index = building_index+2
+    ws.cell(row=1, column=col_index, value=building)
+
+# 生成数据
+for floor_index, floor in enumerate(FLOORS, start=1):
+    for room_index, room in enumerate(ROOMS, start=1):
+        # 生成首列
+        row_index = (floor_index-1)*len(ROOMS)+room_index+1
+        ws.cell(row=row_index, column=1, value=f"{floor}{room:02d}")
+        # 循环楼栋查找寝室
+        for building_index, building in enumerate(BUILDINGS):
+            col_index = building_index+2
+            dorm_name = f"{building}{floor}{room:02d}"
+            if GET:
+                time.sleep(DELAY)
+                if not dorm_req(dorm_name):  # 这一步会请求成绩
+                    continue
+            # 查找是否存在对应文件
+            if os.path.exists(f"{building}\\{dorm_name}.htm"):
+                ws.cell(row=row_index, column=col_index, value=1)
+                dorm_dict[building].append(dorm_name)
+            else:
+                ws.cell(row=row_index, column=col_index, value=0)
+
+# 给全表添加字体和单元格对齐属性
+for row in ws[f"A1:{col_to_excel(len(BUILDINGS)+1)}{len(FLOORS)*len(ROOMS)+1}"]:
+    for cell in row:
+        cell.font = Font(name='微软雅黑', size=12)
+        cell.alignment = Alignment(horizontal='center', vertical='center')
+
+# 添加条件格式
+rule = ColorScaleRule(start_type='percentile', start_value=0, start_color='F8696B',
+                      mid_type='percentile', mid_value=50, mid_color='FCFCFF',
+                      end_type='percentile', end_value=100, end_color='5A8AC6')
+ws.conditional_formatting.add(
+    f"B2:{col_to_excel(len(BUILDINGS)+1)}{len(FLOORS)*len(ROOMS)+1}", rule)
+
+# 保存Excel表格
+wb.save("dorm_dict.xlsx")
+wb.close()
+
+# 保存字典
+with open("dorm_dict.py", 'w+', encoding='UTF-8') as f:
+    f.write(f"DORM_DICT = {str(dorm_dict)}\n")
+
+print("dorm_dict.xlsx & dorm_dict.py Generated!")

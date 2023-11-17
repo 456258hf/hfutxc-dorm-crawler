@@ -154,4 +154,5 @@ cython_debug/
 *.htm
 *.csv
 *.xlsx
+!dorm_dict.xlsx
 test*.py

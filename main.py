@@ -8,13 +8,14 @@ from openpyxl import Workbook
 from openpyxl.styles import Font, Alignment
 from openpyxl.formatting.rule import ColorScaleRule
 
+from dorm_dict import DORM_DICT
+
 URL = "http://39.106.82.121/query/getStudentScore"  # 请求地址
 GET = False  # 是否请求，True：请求数据并保存然后处理，False：读取保存的数据然后处理
 DELAY = 0.1  # 每次请求间隔时间，单位秒
 
-BUILDING = "9N"  # 寝室楼栋，1~10+N/S/#，不区分大小写
-FLOOR = range(1, 7)  # 层号范围，默认为range(1, 7)
-ROOM = range(1, 38)  # 房间号范围，默认为range(1, 38)
+# 寝室楼栋，范围如下：1N, 1S, 2N, 2S, 3S, 4N, 4S, 5N, 5S, 6N, 6S, 7#, 8#, 9N, 9S, 10N, 10S
+BUILDING = "9N"
 
 YEAR_TERM_INDEX = ((23, 1),)  # 目标学期，格式为(年,学期序号)，单个学期需在tuple后打,
 WEEK_NUM = 20  # 学期的周数，默认为20
@@ -117,22 +118,22 @@ def col_to_excel(number):
     return result
 
 
-# 创建数据存放路径
-if not os.path.exists(BUILDING):
-    os.makedirs(BUILDING)
+if __name__ == '__main__':
+    # 创建数据存放路径
+    if not os.path.exists(BUILDING):
+        os.makedirs(BUILDING)
+        GET = True
 
-# 生成表头
-head = ["寝室"]
-for column in range(len(YEAR_TERM_INDEX)):
-    for num in range(WEEK_NUM):
-        head.append(str(num+1))
-head.append("平均成绩")
-output = [head]
+    # 生成表头
+    head = ["寝室"]
+    for column in range(len(YEAR_TERM_INDEX)):
+        for num in range(WEEK_NUM):
+            head.append(str(num+1))
+    head.append("平均成绩")
+    output = [head]
 
-# 处理数据
-for floor in FLOOR:
-    for room in ROOM:
-        dorm_name = f"{BUILDING}{floor}{room:02d}"
+    # 处理数据
+    for dorm_name in DORM_DICT[BUILDING]:
         if GET:
             time.sleep(DELAY)
             if not dorm_req(dorm_name):  # 这一步会请求成绩
@@ -150,73 +151,72 @@ for floor in FLOOR:
         print(",".join(score))
         output.append(score)
 
-# 清理无数据周
-output = remove_empty_weeks(output)
-WEEK_COUNT = len(output[0])-2
-DORM_COUNT = len(output)-1
+    # 清理无数据周
+    output = remove_empty_weeks(output)
+    WEEK_COUNT = len(output[0])-2
+    DORM_COUNT = len(output)-1
 
-# 从旧到新按照成绩排序
-head = output.pop(0)
-for i in range(0, WEEK_COUNT+1):
-    output.sort(key=lambda x, i=i: float(x[i+1]), reverse=True)
-output.insert(0, head)
+    # 从旧到新按照成绩排序
+    head = output.pop(0)
+    for i in range(0, WEEK_COUNT+1):
+        output.sort(key=lambda x, i=i: float(x[i+1]), reverse=True)
+    output.insert(0, head)
 
-# 添加序号列
-for i, output_row in enumerate(output[1:], start=1):
-    output_row.insert(0, i)
-output[0].insert(0, "序号")
+    # 添加序号列
+    for i, output_row in enumerate(output[1:], start=1):
+        output_row.insert(0, i)
+    output[0].insert(0, "序号")
 
-# 生成输出文件名
-output_filename = f"{BUILDING}-{DORM_COUNT}-"
-for year_term in YEAR_TERM_INDEX:
-    for item in year_term:
-        output_filename += f"{str(item)}-"
-output_filename += str(WEEK_COUNT)
+    # 生成输出文件名
+    output_filename = f"{BUILDING}-{DORM_COUNT}-"
+    for year_term in YEAR_TERM_INDEX:
+        for item in year_term:
+            output_filename += f"{str(item)}-"
+    output_filename += str(WEEK_COUNT)
 
-# 保存csv
-with open(f"{output_filename}.csv", 'w', newline='', encoding='GBK') as output_file:
-    writer = csv.writer(output_file)
-    writer.writerows(output)
+    # 保存csv
+    with open(f"{output_filename}.csv", 'w', newline='', encoding='GBK') as output_file:
+        writer = csv.writer(output_file)
+        writer.writerows(output)
 
-
-# 创建Excel文件
-wb = Workbook()
-ws = wb.active
-# 将数据写入Excel文件
-for row_index, row_data in enumerate(output, start=1):
-    for col_index, value in enumerate(row_data, start=1):
-        try:
-            # 尝试将值转换为整数（成绩值）
-            cell_value = int(value)
-        except ValueError:
+    # 创建Excel表格
+    wb = Workbook()
+    ws = wb.active
+    # 将数据写入Excel文件
+    for row_index, row_data in enumerate(output, start=1):
+        for col_index, value in enumerate(row_data, start=1):
             try:
-                # 尝试将值转换为浮点数（平均成绩值）
-                cell_value = float(value)
+                # 尝试将值转换为整数（成绩值）
+                cell_value = int(value)
             except ValueError:
-                # 如果都失败，保留原始值
-                cell_value = value
-        ws.cell(row=row_index, column=col_index, value=cell_value)
-# 给全表添加字体和单元格对齐属性
-for row in ws[f"A1:{col_to_excel(WEEK_COUNT+3)}{DORM_COUNT+1}"]:
-    for cell in row:
-        cell.font = Font(name="微软雅黑", size=12)
-        cell.alignment = Alignment(horizontal="center", vertical="center")
-# 给成绩值添加0的数字格式
-for row in ws[f"C2:{col_to_excel(WEEK_COUNT+2)}{DORM_COUNT+1}"]:
-    for cell in row:
-        cell.number_format = '0'
-# 给平均成绩值添加0.00的数字格式
-for row in ws[f"{col_to_excel(WEEK_COUNT+3)}2:{col_to_excel(WEEK_COUNT+3)}{DORM_COUNT+1}"]:
-    for cell in row:
-        cell.number_format = '0.00'
-# 给所有成绩值添加蓝-白-红的条件格式
-rule = ColorScaleRule(start_type='percentile', start_value=0, start_color='F8696B',
-                      mid_type='percentile', mid_value=50, mid_color='FCFCFF',
-                      end_type='percentile', end_value=100, end_color='5A8AC6')
-ws.conditional_formatting.add(
-    f"C2:{col_to_excel(WEEK_COUNT+3)}{DORM_COUNT+1}", rule)
-# 保存xlsx文件
-wb.save(f"{output_filename}.xlsx")
-wb.close()
+                try:
+                    # 尝试将值转换为浮点数（平均成绩值）
+                    cell_value = float(value)
+                except ValueError:
+                    # 如果都失败，保留原始值
+                    cell_value = value
+            ws.cell(row=row_index, column=col_index, value=cell_value)
+    # 给全表添加字体和单元格对齐属性
+    for row in ws[f"A1:{col_to_excel(WEEK_COUNT+3)}{DORM_COUNT+1}"]:
+        for cell in row:
+            cell.font = Font(name='微软雅黑', size=12)
+            cell.alignment = Alignment(horizontal='center', vertical='center')
+    # 给成绩值添加0的数字格式
+    for row in ws[f"C2:{col_to_excel(WEEK_COUNT+2)}{DORM_COUNT+1}"]:
+        for cell in row:
+            cell.number_format = '0'
+    # 给平均成绩值添加0.00的数字格式
+    for row in ws[f"{col_to_excel(WEEK_COUNT+3)}2:{col_to_excel(WEEK_COUNT+3)}{DORM_COUNT+1}"]:
+        for cell in row:
+            cell.number_format = '0.00'
+    # 给所有成绩值添加蓝-白-红的条件格式
+    rule = ColorScaleRule(start_type='percentile', start_value=0, start_color='F8696B',
+                          mid_type='percentile', mid_value=50, mid_color='FCFCFF',
+                          end_type='percentile', end_value=100, end_color='5A8AC6')
+    ws.conditional_formatting.add(
+        f"C2:{col_to_excel(WEEK_COUNT+3)}{DORM_COUNT+1}", rule)
+    # 保存Excel表格
+    wb.save(f"{output_filename}.xlsx")
+    wb.close()
 
-print(f"Done! #validate dorm:{DORM_COUNT} week:{WEEK_COUNT}")
+    print(f"Done! #validate dorm:{DORM_COUNT} week:{WEEK_COUNT}")
