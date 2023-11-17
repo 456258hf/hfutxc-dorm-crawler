@@ -4,6 +4,12 @@
 
 ---
 
+## Requirements:
+
+```bash
+pip install -r requirements.txt
+```
+
 ## Usage:
 
 0. 当前寝室字典生成于 2023-11-17 ，如果发生寝室调动，导致一个曾经从未有过分数的寝室拥有分数，可以手动在 `dorm_dict.py` 内添加这个寝室，或使用 `dorm_dict_gen.py` 来自动生成寝室字典，请仅在确认需要时使用它

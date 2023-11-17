@@ -107,7 +107,7 @@ def remove_empty_weeks(table: list) -> list:
     return table
 
 
-def col_to_excel(number):
+def col_to_excel(number: int) -> str:
     """将整数转换为excel中列的字母序号"""
     result = ""
     while number > 0:
