@@ -1,4 +1,5 @@
 """爬取 hfutxc 寝室卫生检查系统——查询宿舍床铺评分的数据"""
+import os
 import time
 import csv
 import requests
@@ -73,7 +74,7 @@ def dorm_dec(dorm: str) -> list:
         # 排除一次成绩（四行）中的非首行，其宽1，首行宽5
         if len(cols) != 5:
             continue
-        # 处理日期填入错误情况
+        # 处理日期填入位置错误情况
         if cols[4].text != "--":
             date = cols[4].text
         else:
@@ -81,7 +82,11 @@ def dorm_dec(dorm: str) -> list:
         # 判断是否为目标学期
         term = year_term_get(date)
         if term in YEAR_TERM_INDEX:
-            pos = (int(cols[0].text)-1)+WEEK_NUM*YEAR_TERM_INDEX.index(term)
+            week = int(cols[0].text)-1
+            # 处理周数填入数值错误情况
+            if week > WEEK_NUM:
+                continue
+            pos = week+WEEK_NUM*YEAR_TERM_INDEX.index(term)
             date_index[pos] = cols[1].text
     return date_index
 
@@ -111,6 +116,10 @@ def col_to_excel(number):
 
     return result
 
+
+# 创建数据存放路径
+if not os.path.exists(BUILDING):
+    os.makedirs(BUILDING)
 
 # 生成表头
 head = ["寝室"]
