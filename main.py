@@ -61,7 +61,7 @@ def dorm_req(dorm: str) -> bool:
 
 
 def dorm_dec(dorm: str) -> list:
-    """解码保存的指定寝室的数据，返回指定日期以前的成绩"""
+    """解码保存的指定寝室的数据，返回指定学期内的成绩"""
     date_index = ["-1"]*WEEK_NUM*len(YEAR_TERM_INDEX)
     try:
         with open(f"{BUILDING}\\{dorm}.htm", 'r', encoding='UTF-8') as f:

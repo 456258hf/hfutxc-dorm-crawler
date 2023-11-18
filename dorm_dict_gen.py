@@ -46,9 +46,9 @@ for floor_index, floor in enumerate(FLOORS, start=1):
             col_index = building_index+2
             dorm_name = f"{building}{floor}{room:02d}"
             if GET:
+                print(f"Getting dorm {dorm_name}")
                 time.sleep(DELAY)
-                if not dorm_req(dorm_name):  # 这一步会请求成绩
-                    continue
+                dorm_req(dorm_name)
             # 查找是否存在对应文件
             if os.path.exists(f"{building}\\{dorm_name}.htm"):
                 ws.cell(row=row_index, column=col_index, value=1)
