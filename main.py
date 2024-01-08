@@ -5,7 +5,7 @@ from dorm_dict import DORM_DICT
 from config import BUILDINGS
 
 # 寝室楼栋，范围如下：1N, 1S, 2N, 2S, 3S, 4N, 4S, 5N, 5S, 6N, 6S, 7#, 8#, 9N, 9S, 10N, 10S
-BUILDING = "10N"
+BUILDING = "9N"
 
 FLOORS = range(1, 7)  # 层号范围，默认为range(1, 7)
 ROOMS = range(1, 41)  # 房间号范围，默认为range(1, 41)
@@ -21,7 +21,7 @@ EXTENSION = ["csv", "xlsx"]
 dorms = []
 for floor in FLOORS:
     for room in ROOMS:
-        dorms.append(f"{BUILDING}{floor}{room}")
+        dorms.append(f"{BUILDING}{floor}{room:02d}")
 # 字典求法
 dorms = DORM_DICT[BUILDING]
 
@@ -33,12 +33,14 @@ dorms = []
 for buingding in BUILDINGS:
     for floor in FLOORS:
         for room in ROOMS:
-            dorms.append(f"{buingding}{floor}{room}")
+            dorms.append(f"{buingding}{floor}{room:02d}")
 # 字典求法
 dorms = []
 for string_list in DORM_DICT.values():
     dorms.extend(string_list)
 
 dorms = DORM_DICT[BUILDING]
-dorm_request.dorms_req(dorms)
+unsuccessful_dorms = dorm_request.dorms_req(dorms)
+while unsuccessful_dorms:  # 循环获取直至无失败寝室
+    unsuccessful_dorms = dorm_request.dorms_req(unsuccessful_dorms)
 dorm_decode.dorms_dec(BUILDING, dorms, YEAR_TERM_INDEX, EXTENSION)

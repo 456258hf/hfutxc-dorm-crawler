@@ -5,7 +5,7 @@ from openpyxl import Workbook
 from openpyxl.styles import Font, Alignment
 from openpyxl.formatting.rule import ColorScaleRule
 
-from config import WEEK_NUM, BUILDINGS
+from config import WEEK_NUM
 
 
 def year_term_get(date: str) -> tuple:
@@ -27,8 +27,7 @@ def dorm_dec(dorm: str, year_term_index: list) -> list:
     """解码保存的指定寝室的数据，返回指定学期内的成绩"""
     date_index = ["-1"]*WEEK_NUM*len(year_term_index)
     # 匹配楼栋号
-    building = next(
-        (item for item in BUILDINGS if dorm.startswith(item)), None)
+    building = dorm[:-3]
     try:
         with open(f"{building}\\{dorm}.htm", 'r', encoding='UTF-8') as f:
             html_content = f.read()

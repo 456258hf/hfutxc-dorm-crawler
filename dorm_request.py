@@ -2,7 +2,7 @@
 import os
 import time
 import requests
-from config import URL, DELAY, TIMEOUT, BUILDINGS
+from config import URL, DELAY, TIMEOUT
 
 
 def dorm_req(dorm: str) -> bool:
@@ -17,11 +17,10 @@ def dorm_req(dorm: str) -> bool:
             return False
         text = response.text
         # 无数据则不保存
-        if text == '<tr><td colspan="5" align="center">无数据</td></tr>\n':
-            return False
+        if text.startswith('<tr><td colspan="5" align="center">无数据</td></tr>\n'):
+            return True
         # 匹配楼栋号
-        building = next(
-            (item for item in BUILDINGS if dorm.startswith(item)), None)
+        building = dorm[:-3]
         if not os.path.exists(building):
             os.makedirs(building)
         with open(f"{building}\\{dorm}.htm", 'w+', encoding='UTF-8') as f:
@@ -35,8 +34,8 @@ def dorm_req(dorm: str) -> bool:
         return False
 
 
-def dorms_req(dorms: list) -> bool:
-    """请求指定寝室们的成绩数据并保存为htm文件，返回请求是否全部有效"""
+def dorms_req(dorms: list) -> list:
+    """请求指定寝室们的成绩数据并保存为htm文件，返回获取失败的寝室列表"""
     unsuccessful_dorms = []
     for dorm_index, dorm_name in enumerate(dorms, start=1):
         print(
@@ -44,9 +43,4 @@ def dorms_req(dorms: list) -> bool:
         time.sleep(DELAY)
         if not dorm_req(dorm_name):
             unsuccessful_dorms.append(dorm_name)
-
-    if len(unsuccessful_dorms) != 0:
-        print(f"\nUnsuccessful Dorms:{unsuccessful_dorms}")
-        return False
-    print("\nSuccessfully got the data of all dorms")
-    return True
+    return unsuccessful_dorms
