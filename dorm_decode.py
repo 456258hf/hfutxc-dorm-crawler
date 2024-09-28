@@ -104,7 +104,6 @@ def dorms_dec(building: str, dorms: list, year_term_index: list, extension: list
         # 添加首尾列
         score.insert(0, dorm_name)
         score.append(f"{average:.2f}")
-        print(",".join(score))
         output.append(score)
 
     # 清理无数据周
@@ -178,4 +177,4 @@ def dorms_dec(building: str, dorms: list, year_term_index: list, extension: list
         wb.save(f"{output_filename}.xlsx")
         wb.close()
 
-    print(f"Done! #validate dorm:{dorm_count} week:{week_count}")
+    print(f"{building} done! #validate dorm:{dorm_count} week:{week_count}")

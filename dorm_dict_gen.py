@@ -5,13 +5,8 @@ from openpyxl.styles import Font, Alignment
 from openpyxl.formatting.rule import ColorScaleRule
 
 from dorm_decode import col_to_excel
+from config import BUILDINGS
 
-# 寝室楼栋，默认如下
-# BUILDINGS = ["1N", "1S", "2N", "2S", "3S", "4N", "4S", "5N",
-#              "5S", "6N", "6S", "7#", "8#", "9N", "9S", "10N", "10S"]
-
-BUILDINGS = ["1N", "1S", "2N", "2S", "3S", "4N", "4S", "5N",
-             "5S", "6N", "6S", "7#", "8#", "9N", "9S", "10N", "10S"]
 FLOORS = range(1, 7)  # 层号范围，默认为range(1, 7)
 ROOMS = range(1, 41)  # 房间号范围，默认为range(1, 41)
 IF_EXCEL = True
