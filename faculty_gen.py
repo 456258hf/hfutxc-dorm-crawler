@@ -74,11 +74,11 @@ def faculty_gen(buildings: list, floors: list, rooms: list, if_excel: bool) -> N
 
     if if_excel:
         # 保存Excel表格
-        wb.save("faculty.xlsx")
+        wb.save("faculty_dict.xlsx")
         wb.close()
-        print("faculty.xlsx & faculty.py Generated!")
+        print("faculty_dict.xlsx & faculty_dict.py Generated!")
     else:
-        print("faculty.py Generated!")
+        print("faculty_dict.py Generated!")
 
 
 faculty_gen(BUILDINGS, FLOORS, ROOMS, IF_EXCEL)

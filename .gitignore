@@ -155,4 +155,5 @@ cython_debug/
 *.csv
 *.xlsx
 !dorm_dict.xlsx
+!faculty_dict.xlsx
 test*.py
