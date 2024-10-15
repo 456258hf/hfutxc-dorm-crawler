@@ -37,8 +37,8 @@ def dorm_dec(dorm: str, year_term_index: list) -> list:
     rows = soup.find_all('tr')
     for row in rows:
         cols = row.find_all('td')
-        # 排除一次成绩（四行）中的非首行，其宽1，首行宽5
-        if len(cols) != 5:
+        # 排除一次成绩（四行）中的非首行，其宽1，首行宽6
+        if len(cols) != 6:
             continue
         # 处理日期填入位置错误情况
         if cols[4].text != "--":
