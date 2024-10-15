@@ -1,21 +1,25 @@
+"""根据存在的数据文件，统计寝室存在情况，生成寝室字典dorm_dict.py"""
 import os
-from bs4 import BeautifulSoup
 from openpyxl import Workbook
 from openpyxl.styles import Font, Alignment
 from openpyxl.formatting.rule import ColorScaleRule
 
 from dorm_decode import col_to_excel
-from config import BUILDINGS
+from config import BUILDINGS, FACULTIES, GRADES
 
 FLOORS = range(1, 7)  # 层号范围，默认为range(1, 7)
 ROOMS = range(1, 41)  # 房间号范围，默认为range(1, 41)
-
-faculty_tab = ["生态", "文法", "英语", "城市", "电气",
-               "计算", "经济", "能源", "食品", "物流", "材料", "机械"]
-grade_tab = ["15", "16", "17", "18", "19", "20", "21", "22", "23", "24"]
+IF_EXCEL = True
 
 
-def faculty_gen(buildings: list, floors: list, rooms: list) -> None:
+def faculty_gen(buildings: list, floors: list, rooms: list, if_excel: bool) -> None:
+    """创建空的寝室院系年级字典"""
+    faculty_grade=[]
+    for faculty in FACULTIES:
+        for grade in GRADES:
+            faculty_grade.append(faculty+grade)
+    faculty_dict = {key: [] for key in faculty_grade}
+
     # 创建Excel表格
     wb = Workbook()
     ws = wb.active
@@ -32,7 +36,7 @@ def faculty_gen(buildings: list, floors: list, rooms: list) -> None:
         for room_index, room in enumerate(rooms, start=1):
             # 生成首列
             row_index = (floor_index-1)*len(rooms)+room_index+1
-            ws.cell(row=row_index, column=1, value=int(f"{floor}{room:02d}"))
+            ws.cell(row=row_index, column=1, value=f"{floor}{room:02d}")
             # 循环楼栋查找寝室
             for building_index, building in enumerate(buildings):
                 col_index = building_index+2
@@ -47,8 +51,9 @@ def faculty_gen(buildings: list, floors: list, rooms: list) -> None:
                     # 查找年级
                     pos = int(html_content.find("grade_id = "))
                     grade_id = int(html_content[pos+11:pos+12])
-                    string = faculty_tab[faculty_id-1]+grade_tab[grade_id]
+                    string = FACULTIES[faculty_id-1]+GRADES[grade_id-6]
                     ws.cell(row=row_index, column=col_index, value=string)
+                    faculty_dict[string].append(dorm_name)
 
     # 给全表添加字体和单元格对齐属性
     for row in ws[f"A1:{col_to_excel(len(buildings)+1)}{len(floors)*len(rooms)+1}"]:
@@ -63,10 +68,17 @@ def faculty_gen(buildings: list, floors: list, rooms: list) -> None:
     # ws.conditional_formatting.add(
     #     f"B2:{col_to_excel(len(buildings)+1)}{len(floors)*len(rooms)+1}", rule)
 
-    # 保存Excel表格
-    wb.save("faculty.xlsx")
-    wb.close()
-    print("faculty.xlsx Generated!")
+    # 保存字典
+    with open("faculty_dict.py", 'w+', encoding='UTF-8') as f:
+        f.write(f"FACULTY_DICT = {str(faculty_dict)}\n")
+
+    if if_excel:
+        # 保存Excel表格
+        wb.save("faculty.xlsx")
+        wb.close()
+        print("faculty.xlsx & faculty.py Generated!")
+    else:
+        print("faculty.py Generated!")
 
 
-faculty_gen(BUILDINGS, FLOORS, ROOMS)
+faculty_gen(BUILDINGS, FLOORS, ROOMS, IF_EXCEL)
