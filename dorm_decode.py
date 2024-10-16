@@ -83,7 +83,7 @@ def col_to_excel(number: int) -> str:
     return result
 
 
-def dorms_dec(building: str, dorms: list, year_term_index: list, extension: list) -> None:
+def dorms_dec(group: str, dorms: list, year_term_index: list, extension: list) -> None:
     """将指定的寝室们的指定学期的数据进行处理，生成指定格式的文件"""
     # 生成表头
     head = ["寝室"]
@@ -123,7 +123,7 @@ def dorms_dec(building: str, dorms: list, year_term_index: list, extension: list
     output[0].insert(0, "序号")
 
     # 生成输出文件名
-    output_filename = f"{building}-{dorm_count}-"
+    output_filename = f"{group}-{dorm_count}-"
     for year_term in year_term_index:
         for item in year_term:
             output_filename += f"{str(item)}-"
@@ -177,4 +177,4 @@ def dorms_dec(building: str, dorms: list, year_term_index: list, extension: list
         wb.save(f"{output_filename}.xlsx")
         wb.close()
 
-    print(f"{building} done! #validate dorm:{dorm_count} week:{week_count}")
+    print(f"{group} done! #validate dorm:{dorm_count} week:{week_count}")
