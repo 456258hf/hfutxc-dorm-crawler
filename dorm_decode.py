@@ -26,13 +26,17 @@ def year_term_get(date: str) -> tuple:
 def dorm_dec(dorm: str, year_term_index: list) -> list:
     """解码保存的指定寝室的数据，返回指定学期内的成绩"""
     date_index = ["-1"]*WEEK_NUM*len(year_term_index)
-    # 匹配楼栋号
+    # 匹配楼栋号，读取文件
     building = dorm[:-3]
     try:
         with open(f"{building}\\{dorm}.htm", 'r', encoding='UTF-8') as f:
             html_content = f.read()
     except FileNotFoundError:
         return date_index
+    # 在调试信息前截断html_content
+    point = html_content.find('<div')
+    html_content = html_content[:point]
+    # 使用bs4处理html
     soup = BeautifulSoup(html_content, 'html.parser')
     rows = soup.find_all('tr')
     for row in rows:

@@ -5,7 +5,7 @@ from dorm_dict import DORM_DICT
 from faculty_dict import FACULTY_DICT
 from config import BUILDINGS, FACULTIES, GRADES
 
-# 寝室楼栋，范围如下：1N, 1S, 2N, 2S, 3S, 4N, 4S, 5N, 5S, 6N, 6S, 7#, 8#, 9N, 9S, 10N, 10S
+# 寝室楼栋，范围如下：1N, 1S, 2N, 2S, 3N, 3S, 4N, 4S, 5N, 5S, 6N, 6S, 7#, 8#, 9N, 9S, 10N, 10S
 BUILDING = "9N"
 
 # 院系年级，例如：机械22
@@ -46,7 +46,6 @@ for building in BUILDINGS:
     dorm_decode.dorms_dec(building, dorms, YEAR_TERM_INDEX, EXTENSION)
 
 # 遍历字典2732，以院系年级各自生成csv与xlsx
-
 for faculty in FACULTIES:
     for grade in GRADES:
         faculty_grade = faculty+grade
@@ -67,7 +66,7 @@ if REQ:
         unsuccessful_dorms = dorm_request.dorms_req(unsuccessful_dorms)
 dorm_decode.dorms_dec("all", dorms, YEAR_TERM_INDEX, EXTENSION)
 
-# 遍历全校4320，不生成
+# 遍历全校4320，不生成，用于后续生成字典
 dorms = []
 for buingding in BUILDINGS:
     for floor in FLOORS:

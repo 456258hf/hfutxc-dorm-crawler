@@ -1,4 +1,4 @@
-"""根据存在的数据文件，统计寝室存在情况，生成寝室字典dorm_dict.py"""
+"""根据存在的数据文件，统计寝室存在情况，生成寝室字典faculty_dict.py"""
 import os
 from openpyxl import Workbook
 from openpyxl.styles import Font, Alignment
@@ -12,7 +12,7 @@ ROOMS = range(1, 41)  # 房间号范围，默认为range(1, 41)
 IF_EXCEL = True
 
 
-def faculty_gen(buildings: list, floors: list, rooms: list, if_excel: bool) -> None:
+def faculty_dict_gen(buildings: list, floors: list, rooms: list, if_excel: bool) -> None:
     """创建空的寝室院系年级字典"""
     faculty_grade=[]
     for faculty in FACULTIES:
@@ -81,4 +81,4 @@ def faculty_gen(buildings: list, floors: list, rooms: list, if_excel: bool) -> N
         print("faculty_dict.py Generated!")
 
 
-faculty_gen(BUILDINGS, FLOORS, ROOMS, IF_EXCEL)
+faculty_dict_gen(BUILDINGS, FLOORS, ROOMS, IF_EXCEL)
