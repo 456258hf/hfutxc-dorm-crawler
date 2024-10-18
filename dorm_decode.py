@@ -1,4 +1,4 @@
-"""爬取 hfutxc 寝室卫生检查系统——查询宿舍床铺评分的数据"""
+"""解码数据相关代码"""
 import csv
 from bs4 import BeautifulSoup
 from openpyxl import Workbook
@@ -87,7 +87,7 @@ def col_to_excel(number: int) -> str:
     return result
 
 
-def dorms_dec(group: str, dorms: list, year_term_index: list, if_csv: bool, if_xlsx: bool) -> None:
+def dorms_dec(group: str, dorms: list, year_term_index: list, if_csv: bool, if_xlsx: bool) -> tuple:
     """将指定的寝室们的指定学期的数据进行处理，生成指定格式的文件"""
     # 生成表头
     head = ["寝室"]
@@ -181,4 +181,4 @@ def dorms_dec(group: str, dorms: list, year_term_index: list, if_csv: bool, if_x
         wb.save(f"{output_filename}.xlsx")
         wb.close()
 
-    print(f"{group} done! #validate dorm:{dorm_count} week:{week_count}")
+    return (dorm_count, week_count)
