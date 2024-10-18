@@ -5,7 +5,7 @@ from openpyxl import Workbook
 from openpyxl.styles import Font, Alignment
 from openpyxl.formatting.rule import ColorScaleRule
 
-from config import WEEK_NUM
+WEEK_NUM = 20  # 学期的周数，默认为20
 
 
 def year_term_get(date: str) -> tuple:
@@ -87,7 +87,7 @@ def col_to_excel(number: int) -> str:
     return result
 
 
-def dorms_dec(group: str, dorms: list, year_term_index: list, extension: list) -> None:
+def dorms_dec(group: str, dorms: list, year_term_index: list, if_csv: bool, if_xlsx: bool) -> None:
     """将指定的寝室们的指定学期的数据进行处理，生成指定格式的文件"""
     # 生成表头
     head = ["寝室"]
@@ -133,13 +133,13 @@ def dorms_dec(group: str, dorms: list, year_term_index: list, extension: list) -
             output_filename += f"{str(item)}-"
     output_filename += str(week_count)
 
-    if "csv" in extension:
+    if if_csv:
         # 保存csv
         with open(f"{output_filename}.csv", 'w', newline='', encoding='GBK') as output_file:
             writer = csv.writer(output_file)
             writer.writerows(output)
 
-    if "xlsx" in extension:
+    if if_xlsx:
         # 创建Excel表格
         wb = Workbook()
         ws = wb.active

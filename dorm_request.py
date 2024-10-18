@@ -2,7 +2,10 @@
 import os
 import time
 import requests
-from config import URL, DELAY, TIMEOUT
+
+URL = "http://39.106.82.121/query/getStudentScore"  # 请求地址
+DELAY = 0.01  # 每次请求间隔时间，单位秒
+TIMEOUT = 10  # 请求超时时间，单位秒
 
 
 def dorm_req(dorm: str) -> bool:

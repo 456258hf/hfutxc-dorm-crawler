@@ -5,14 +5,17 @@ from openpyxl.styles import Font, Alignment
 from openpyxl.formatting.rule import ColorScaleRule
 
 from dorm_decode import col_to_excel
-from config import BUILDINGS
+
+# 寝室楼栋
+BUILDINGS = ["1N", "1S", "2N", "2S", "3N", "3S", "4N", "4S", "5N",
+             "5S", "6N", "6S", "7#", "8#", "9N", "9S", "10N", "10S"]
 
 FLOORS = range(1, 7)  # 层号范围，默认为range(1, 7)
 ROOMS = range(1, 41)  # 房间号范围，默认为range(1, 41)
 IF_EXCEL = True
 
 
-def dorm_dict_gen(buildings: list, floors: list, rooms: list, if_excel: bool) -> None:
+def dorm_dict_genf(buildings: list, floors: list, rooms: list, if_excel: bool) -> None:
     """创建空的寝室字典"""
     dorm_dict = {key: [] for key in buildings}
 
@@ -44,24 +47,24 @@ def dorm_dict_gen(buildings: list, floors: list, rooms: list, if_excel: bool) ->
                 else:
                     ws.cell(row=row_index, column=col_index, value=0)
 
-    # 给全表添加字体和单元格对齐属性
-    for row in ws[f"A1:{col_to_excel(len(buildings)+1)}{len(floors)*len(rooms)+1}"]:
-        for cell in row:
-            cell.font = Font(name='微软雅黑', size=12)
-            cell.alignment = Alignment(horizontal='center', vertical='center')
-
-    # 添加条件格式
-    rule = ColorScaleRule(start_type='percentile', start_value=0, start_color='F8696B',
-                          mid_type='percentile', mid_value=50, mid_color='FCFCFF',
-                          end_type='percentile', end_value=100, end_color='5A8AC6')
-    ws.conditional_formatting.add(
-        f"B2:{col_to_excel(len(buildings)+1)}{len(floors)*len(rooms)+1}", rule)
-
     # 保存字典
     with open("dorm_dict.py", 'w+', encoding='UTF-8') as f:
         f.write(f"DORM_DICT = {str(dorm_dict)}\n")
 
     if if_excel:
+        # 给全表添加字体和单元格对齐属性
+        for row in ws[f"A1:{col_to_excel(len(buildings)+1)}{len(floors)*len(rooms)+1}"]:
+            for cell in row:
+                cell.font = Font(name='微软雅黑', size=12)
+                cell.alignment = Alignment(
+                    horizontal='center', vertical='center')
+
+        # 添加条件格式
+        rule = ColorScaleRule(start_type='percentile', start_value=0, start_color='F8696B',
+                              mid_type='percentile', mid_value=50, mid_color='FCFCFF',
+                              end_type='percentile', end_value=100, end_color='5A8AC6')
+        ws.conditional_formatting.add(
+            f"B2:{col_to_excel(len(buildings)+1)}{len(floors)*len(rooms)+1}", rule)
         # 保存Excel表格
         wb.save("dorm_dict.xlsx")
         wb.close()
@@ -70,4 +73,5 @@ def dorm_dict_gen(buildings: list, floors: list, rooms: list, if_excel: bool) ->
         print("dorm_dict.py Generated!")
 
 
-dorm_dict_gen(BUILDINGS, FLOORS, ROOMS, IF_EXCEL)
+if __name__ == "__main__":
+    dorm_dict_genf(BUILDINGS, FLOORS, ROOMS, IF_EXCEL)
