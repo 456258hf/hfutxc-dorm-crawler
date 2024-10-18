@@ -47,7 +47,7 @@ class HfutxcDormCrawler:
         self.dict_xlsx_faculty = tk.BooleanVar(value=True)  # 是否生成院系年级字典xlsx
 
         self.req = tk.BooleanVar(value=False)  # 是否获取
-        self.delay = tk.DoubleVar(value=0.1)  # 请求间隔，单位ms
+        self.delay = tk.DoubleVar(value=0.01)  # 请求间隔，单位ms
         self.timeout = tk.DoubleVar(value=10)  # 请求超时
 
         self.dorm_sum = tk.IntVar()  # 寝室总数
@@ -318,7 +318,7 @@ class HfutxcDormCrawler:
                     if self.req.get():
                         self.dorms_req_n(dorms, self.delay.get(),
                                          self.timeout.get())
-                    dorm_decode.dorms_dec(group, dorms, literal_eval(self.year_term_index.get(
+                    dorm_count, week_count = dorm_decode.dorms_dec(group, dorms, literal_eval(self.year_term_index.get(
                     )), self.csv.get(), self.xlsx.get())
                     log = f"获取{group}完成，有效寝室数：{dorm_count}，有效周数：{week_count}"
                     self.log.set(log)
@@ -330,7 +330,7 @@ class HfutxcDormCrawler:
             if self.req.get():
                 self.dorms_req_n(dorms, self.delay.get(),
                                  self.timeout.get())
-            dorm_decode.dorms_dec(
+            dorm_count, week_count = dorm_decode.dorms_dec(
                 group, dorms, literal_eval(self.year_term_index.get()), self.csv.get(), self.xlsx.get())
             log = f"获取{group}完成，有效寝室数：{dorm_count}，有效周数：{week_count}"
             self.log.set(log)

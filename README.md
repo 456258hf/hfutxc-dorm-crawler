@@ -13,6 +13,8 @@ pip install -r requirements.txt
 
 ## Usage:
 
+当前寝室字典生成于 2024-10-18
+
 ```bash
 py main.py
 ```
