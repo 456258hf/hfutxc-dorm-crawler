@@ -178,7 +178,8 @@ def dorms_dec(group: str, dorms: list, year_term_index: list, if_csv: bool, if_x
         ws.conditional_formatting.add(
             f"C2:{col_to_excel(week_count+3)}{dorm_count+1}", rule)
         # 保存Excel表格
-        wb.save(f"{output_filename}.xlsx")
+        output_filename_xlsx = f"{output_filename}.xlsx"
+        wb.save(output_filename_xlsx)
         wb.close()
 
-    return (dorm_count, week_count)
+    return (dorm_count, week_count, output_filename_xlsx)
