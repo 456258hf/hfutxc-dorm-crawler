@@ -3,7 +3,6 @@ import tkinter as tk
 from tkinter import ttk
 import time
 import os
-from ast import literal_eval
 
 import dorm_request
 import dorm_decode
@@ -39,51 +38,44 @@ class HfutxcDormCrawler:
         self.root = root
         root.title('hfutxc-dorm-crawler')
 
-        # 定义变量
+        # 各选项卡（上半部分页面）变量
+        self.req = tk.BooleanVar(value=True)  # 是否获取
         self.faculty = tk.StringVar(value="机械工程系")  # 院系
         self.grade = tk.StringVar(value="22")  # 年级
         self.building = tk.StringVar(value="9N")  # 楼栋
         self.full_mode = tk.StringVar(value="以楼栋各自生成")  # 全校生成模式
-        self.csv = tk.BooleanVar(value=True)  # 是否生成csv
-        self.xlsx = tk.BooleanVar(value=True)  # 是否生成xlsx
-        self.xlsx_open = tk.BooleanVar(value=True)  # 生成后是否自动打开xlsx
         self.dict_xlsx_dorm = tk.BooleanVar(value=True)  # 是否生成寝室字典xlsx
         self.dict_xlsx_faculty = tk.BooleanVar(value=True)  # 是否生成院系年级字典xlsx
 
-        self.req = tk.BooleanVar(value=True)  # 是否获取
-        self.delay = tk.DoubleVar(value=0.01)  # 请求间隔，单位ms
-        self.timeout = tk.DoubleVar(value=10)  # 请求超时
-
+        # 进度显示（下半部分）变量
         self.dorm_sum = tk.IntVar()  # 寝室总数
         self.dorm_current = tk.IntVar()  # 当前寝室序号
         self.dorm_current_name = tk.StringVar(value='当前寝室')  # 当前寝室名称
         self.dorm_counter = tk.StringVar(value='当前序号/总数')  # 当前序号/总数
         self.dorm_percent = tk.DoubleVar(value=0)  # 进度百分比
         self.log = tk.StringVar(value='log')  # 输出
-
         self.interrupt = False  # 停止标志
 
-        # 目标学期，格式为(年,学期序号)，单个学期需在tuple后打,
-        self.year_term_index = tk.StringVar(value="((24, 1),)")
+        # 设置页变量
+        self.csv = tk.BooleanVar(value=True)  # 是否生成csv
+        self.xlsx = tk.BooleanVar(value=True)  # 是否生成xlsx
+        self.xlsx_open = tk.BooleanVar(value=True)  # 生成后是否自动打开xlsx
+        self.delay = tk.DoubleVar(value=0.01)  # 请求间隔，单位ms
+        self.timeout = tk.DoubleVar(value=10)  # 请求超时
+        self.year = tk.IntVar(value='2024')  # 目标学年
+        self.year_term1 = tk.BooleanVar(value=True)  # 目标学年第一学期
+        self.year_term2 = tk.BooleanVar(value=False)  # 目标学年第二学期
 
         # 创建 Notebook 小部件
         self.notebook = ttk.Notebook(root, padding="10 10 12 12")
         self.notebook.grid(pady=10, column=1, row=1)
 
-        # 创建五个 Frame 作为选项卡内容
-        # frame1
-        frame1 = self.create_frame1()
-        frame2 = self.create_frame2()
-        frame3 = self.create_frame3()
-        frame4 = self.create_frame4()
-        frame5 = self.create_frame5()
-
-        # 将 Frame 添加到 Notebook 中
-        self.notebook.add(frame1, text='院系年级')
-        self.notebook.add(frame2, text='楼栋')
-        self.notebook.add(frame3, text='全校')
-        self.notebook.add(frame4, text='更新字典')
-        self.notebook.add(frame5, text='设置')
+        # 创建五个 Frame 作为选项卡内容，添加到 Notebook 中
+        self.notebook.add(self.create_frame1(), text='院系年级')
+        self.notebook.add(self.create_frame2(), text='楼栋')
+        self.notebook.add(self.create_frame3(), text='全校')
+        self.notebook.add(self.create_frame4(), text='更新字典')
+        self.notebook.add(self.create_frame5(), text='设置')
 
         # 监听选项卡切换事件
         self.notebook.bind("<<NotebookTabChanged>>", self.on_tab_change)
@@ -220,7 +212,7 @@ class HfutxcDormCrawler:
 
         # row 1
         ttk.Checkbutton(frame, text='生成csv',
-                        variable=self.csv,).grid(column=1, row=1)
+                        variable=self.csv).grid(column=1, row=1)
         ttk.Checkbutton(frame, text='生成xlsx',  variable=self.xlsx,
                         command=self.xlsx_changed).grid(column=2, row=1)
         ttk.Checkbutton(frame, text='自动打开xlsx', variable=self.xlsx_open,
@@ -233,9 +225,13 @@ class HfutxcDormCrawler:
         ttk.Entry(frame, textvariable=self.timeout).grid(column=4, row=2)
 
         # row 3
-        ttk.Label(frame, text="学期：").grid(column=1, row=3)
-        ttk.Entry(frame, textvariable=self.year_term_index).grid(
-            column=2, row=3)
+        ttk.Label(frame, text="学年：").grid(column=1, row=3)
+        ttk.Spinbox(frame, from_=2024, to=2099,
+                    textvariable=self.year).grid(column=2, row=3)
+        ttk.Checkbutton(frame, text='第一学期', variable=self.year_term1,
+                        command=self.year_term1_changed).grid(column=3, row=3)
+        ttk.Checkbutton(frame, text='第二学期', variable=self.year_term2,
+                        command=self.year_term2_changed).grid(column=4, row=3)
 
         for child in frame.winfo_children():
             child.grid_configure(padx=5, pady=5)
@@ -368,8 +364,13 @@ class HfutxcDormCrawler:
             self.dorms_req_n(group, dorms)
         self.log.set(f"处理{group}数据中……")
         self.root.update()
+        year_term_index = []
+        if self.year_term1.get():
+            year_term_index.append((self.year.get(), 1))
+        if self.year_term2.get():
+            year_term_index.append((self.year.get(), 2))
         dorm_count, week_count, output_filename_xlsx = dorm_decode.dorms_dec(
-            group, dorms, literal_eval(self.year_term_index.get()), self.csv.get(), self.xlsx.get())
+            group, dorms, year_term_index, self.csv.get(), self.xlsx.get())
         self.log.set(f"处理{group}完成，有效寝室数：{dorm_count}，有效周数：{week_count}")
         # 打开xlsx
         if xlsx_open:
@@ -393,6 +394,16 @@ class HfutxcDormCrawler:
     def req_hint(self) -> None:
         """切换在线获取时提示"""
         self.log.set("非在线获取时请先确认已在线获取过")
+
+    def year_term1_changed(self) -> None:
+        """避免未选择学期"""
+        if not (self.year_term1.get() or self.year_term2.get()):
+            self.year_term2.set(True)
+
+    def year_term2_changed(self) -> None:
+        """避免未选择学期"""
+        if not (self.year_term1.get() or self.year_term2.get()):
+            self.year_term1.set(True)
 
 
 if __name__ == "__main__":

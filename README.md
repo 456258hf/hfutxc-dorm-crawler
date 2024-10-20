@@ -26,7 +26,7 @@ py main.py
 1. ☑️（变相解决） frame 类化
 2. ☑️ decode 函数包装
 3. ☑️ 院系名称写全
-4. 优化学期输入方式
+4. ☑️ 优化学期输入方式
 5. 全校部分，架构优化，总数、进度条与输出显示优化
 6. 合并两个 dict_gen
 7. 优化 dict_gen 输出位置
@@ -55,5 +55,5 @@ py main.py
 
 1. ☑️（变相解决） 切换界面时不会自动停止、清除已显示内容
 2. ☑️ dict_gen 进度条异常
-3. 处理 excel 已打开时的 PermissionError
+3. 处理 excel 已打开时的 PermissionError（添加相关log提示）
 4. 全校分院系年级、分楼栋时停止异常

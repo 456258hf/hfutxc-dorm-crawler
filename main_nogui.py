@@ -29,7 +29,7 @@ BUILDING = "9N"
 # 院系年级，例如：机械22
 FACULTY = "机械22"
 
-YEAR_TERM_INDEX = ((24, 1),)  # 目标学期，格式为(年,学期序号)，单个学期需在tuple后打,
+YEAR_TERM_INDEX = ((2024, 1),)  # 目标学期，格式为(年,学期序号)，单个学期需在tuple后打,
 
 IF_CSV = True
 IF_XLSX = True
@@ -37,12 +37,12 @@ IF_XLSX = True
 REQ = False
 
 # 常用：单楼栋字典，生成csv与xlsx
-# dorms = DORM_DICT[BUILDING]
-# if REQ:
-#     unsuccessful_dorms = dorm_request.dorms_req(dorms)
-#     while unsuccessful_dorms:  # 循环获取直至无失败寝室
-#         unsuccessful_dorms = dorm_request.dorms_req(unsuccessful_dorms)
-# dorm_decode.dorms_dec(BUILDING, dorms, YEAR_TERM_INDEX, IF_CSV, IF_XLSX)
+dorms = DORM_DICT[BUILDING]
+if REQ:
+    unsuccessful_dorms = dorm_request.dorms_req(dorms)
+    while unsuccessful_dorms:  # 循环获取直至无失败寝室
+        unsuccessful_dorms = dorm_request.dorms_req(unsuccessful_dorms)
+dorm_decode.dorms_dec(BUILDING, dorms, YEAR_TERM_INDEX, IF_CSV, IF_XLSX)
 
 # 常用：单院系年级字典，生成csv与xlsx
 dorms = FACULTY_DICT[FACULTY]

@@ -10,7 +10,7 @@ WEEK_NUM = 20  # 学期的周数，默认为20
 
 def year_term_get(date: str) -> tuple:
     """使用日期计算学期"""
-    year = int(date[2:4])
+    year = int(date[:4])
     month = int(date[5:7])
     if month <= 2:
         year -= 1
