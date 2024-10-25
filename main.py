@@ -6,10 +6,8 @@ import os
 
 import dorm_request
 import dorm_decode
-from dorm_dict import DORM_DICT
-from faculty_dict import FACULTY_DICT
 import dorm_dict_gen
-import faculty_dict_gen
+from dorm_dict import BUILDING_DICT, FACULTY_DICT
 
 # 寝室楼栋
 BUILDINGS = ("1N", "1S", "2N", "2S", "3N", "3S", "4N", "4S", "5N",
@@ -44,7 +42,6 @@ class HfutxcDormCrawler:
         self.grade = tk.StringVar(value="22")  # 年级
         self.building = tk.StringVar(value="9N")  # 楼栋
         self.full_mode = tk.StringVar(value="以楼栋各自生成")  # 全校生成模式
-        self.dict_xlsx_dorm = tk.BooleanVar(value=True)  # 是否生成寝室字典xlsx
         self.dict_xlsx_faculty = tk.BooleanVar(value=True)  # 是否生成院系年级字典xlsx
 
         # 进度显示（下半部分）变量
@@ -192,10 +189,8 @@ class HfutxcDormCrawler:
         frame.rowconfigure(4, weight=1)
 
         # row 1
-        ttk.Checkbutton(frame, text='生成寝室字典xlsx',
-                        variable=self.dict_xlsx_dorm).grid(column=1, row=1)
         ttk.Checkbutton(frame, text='生成院系年级字典xlsx',
-                        variable=self.dict_xlsx_faculty).grid(column=2, row=1)
+                        variable=self.dict_xlsx_faculty).grid(column=1, row=1)
         ttk.Label(frame, text="注：会遍历全校寝室，请仅在必要时使用").grid(
             column=3, row=1, columnspan=2)
 
@@ -259,12 +254,12 @@ class HfutxcDormCrawler:
             dorms = FACULTY_DICT[group]
         elif tab_text == "楼栋":
             group = self.building.get()
-            dorms = DORM_DICT[group]
+            dorms = BUILDING_DICT[group]
         elif tab_text == "全校":
             if self.full_mode.get() == "以楼栋各自生成":
                 for building in BUILDINGS:
                     group = building
-                    dorms = DORM_DICT[building]
+                    dorms = BUILDING_DICT[building]
             elif self.full_mode.get() == "以院系年级各自生成":
                 for faculty in FACULTIES:
                     for grade in GRADES:
@@ -273,7 +268,7 @@ class HfutxcDormCrawler:
             elif self.full_mode.get() == "合并生成":
                 dorms = []
                 for building in BUILDINGS:
-                    dorms.extend(DORM_DICT[building])
+                    dorms.extend(BUILDING_DICT[building])
         elif tab_text == "更新字典":
             dorms = []
             for buingding in BUILDINGS:
@@ -298,13 +293,13 @@ class HfutxcDormCrawler:
             self.dorms_process(group, dorms, self.xlsx_open.get())
         elif tab_text == "楼栋":
             group = self.building.get()
-            dorms = DORM_DICT[group]
+            dorms = BUILDING_DICT[group]
             self.dorms_process(group, dorms, self.xlsx_open.get())
         elif tab_text == "全校":
             if self.full_mode.get() == "以楼栋各自生成":
                 for building in BUILDINGS:
                     group = building
-                    dorms = DORM_DICT[building]
+                    dorms = BUILDING_DICT[building]
                     self.dorms_process(group, dorms, False)
             elif self.full_mode.get() == "以院系年级各自生成":
                 for faculty in FACULTIES:
@@ -316,7 +311,7 @@ class HfutxcDormCrawler:
                 group = "全校"
                 dorms = []
                 for building in BUILDINGS:
-                    dorms.extend(DORM_DICT[building])
+                    dorms.extend(BUILDING_DICT[building])
                 self.dorms_process(group, dorms, self.xlsx_open.get())
         elif tab_text == "更新字典":
             group = "全校"
@@ -328,9 +323,11 @@ class HfutxcDormCrawler:
             if self.req.get():
                 self.dorms_req_n(group, dorms)
             dorm_dict_gen.dorm_dict_genf(
-                BUILDINGS, FLOORS, ROOMS, self.dict_xlsx_dorm.get())
-            faculty_dict_gen.faculty_dict_genf(BUILDINGS, FLOORS, ROOMS,
-                                               self.dict_xlsx_faculty.get())
+                BUILDINGS, FLOORS, ROOMS, self.dict_xlsx_faculty.get())
+            if self.dict_xlsx_faculty.get():
+                self.log.set("寝室字典dorm_dict.py与dorm_dict.xlsx生成完毕")
+            else:
+                self.log.set("寝室字典dorm_dict.py生成完毕")
             self.button.configure(text='开始', command=self.start)
 
     def dorms_req_n(self, group: str, dorms: list) -> bool:

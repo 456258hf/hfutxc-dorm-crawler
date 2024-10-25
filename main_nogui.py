@@ -1,8 +1,7 @@
 """爬取 hfutxc 寝室卫生检查系统——查询宿舍床铺评分的数据"""
 import dorm_request
 import dorm_decode
-from dorm_dict import DORM_DICT
-from faculty_dict import FACULTY_DICT
+from dorm_dict import BUILDING_DICT,FACULTY_DICT
 
 """const config"""
 # 寝室楼栋
@@ -37,7 +36,7 @@ IF_XLSX = True
 REQ = False
 
 # 常用：单楼栋字典，生成csv与xlsx
-dorms = DORM_DICT[BUILDING]
+dorms = BUILDING_DICT[BUILDING]
 if REQ:
     unsuccessful_dorms = dorm_request.dorms_req(dorms)
     while unsuccessful_dorms:  # 循环获取直至无失败寝室
@@ -54,7 +53,7 @@ dorm_decode.dorms_dec(FACULTY, dorms, YEAR_TERM_INDEX, IF_CSV, IF_XLSX)
 
 # 遍历字典2732，以楼栋各自生成csv与xlsx
 # for building in BUILDINGS:
-#     dorms = DORM_DICT[building]
+#     dorms = BUILDING_DICT[building]
 #     if REQ:
 #         unsuccessful_dorms = dorm_request.dorms_req(dorms)
 #         while unsuccessful_dorms:  # 循环获取直至无失败寝室
@@ -76,7 +75,7 @@ dorm_decode.dorms_dec(FACULTY, dorms, YEAR_TERM_INDEX, IF_CSV, IF_XLSX)
 # 遍历字典2732，合并生成csv与xlsx
 # dorms = []
 # for building in BUILDINGS:
-#     dorms.extend(DORM_DICT[building])
+#     dorms.extend(BUILDING_DICT[building])
 # if REQ:
 #     unsuccessful_dorms = dorm_request.dorms_req(dorms)
 #     while unsuccessful_dorms:  # 循环获取直至无失败寝室

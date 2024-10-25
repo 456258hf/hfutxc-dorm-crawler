@@ -13,7 +13,7 @@ pip install -r requirements.txt
 
 ## Usage:
 
-当前寝室字典生成于 2024-10-18
+当前寝室字典生成于 2024-10-25
 
 ```bash
 py main.py
@@ -28,8 +28,8 @@ py main.py
 3. ☑️ 院系名称写全
 4. ☑️ 优化学期输入方式
 5. 全校部分，架构优化，总数、进度条与输出显示优化
-6. 合并两个 dict_gen
-7. 优化 dict_gen 输出位置
+6. ☑️ 合并两个 dict_gen
+7. ☑️ 优化 dict_gen 输出位置
 8. decode 流控，添加进度条，使按钮可以停止 decode
 9. 优化 faculty_gen 速度
 
