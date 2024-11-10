@@ -1,7 +1,10 @@
 # hfutxc-dorm-crawler
 
 爬取 hfutxc [寝室卫生检查系统](http://39.106.82.121/query)——查询宿舍床铺评分的数据
+
 GUI 绝赞制作中
+
+![alt text](image.png)
 
 ---
 
@@ -13,7 +16,7 @@ pip install -r requirements.txt
 
 ## Usage:
 
-当前寝室字典生成于 2024-10-25
+当前寝室字典生成于 2024-11-08
 
 ```bash
 py main.py
@@ -47,7 +50,7 @@ py main.py
 
 ### 远期想法：
 
-1. 使用数据库管理
+1. 🔄 使用数据库管理——即将手动重构代码
 2. 使用 PyQt 再写一份 GUI
 3. 使用 treeview 控件或者其他库实现脱离 excel 生成结果
 
@@ -55,5 +58,7 @@ py main.py
 
 1. ☑️（变相解决） 切换界面时不会自动停止、清除已显示内容
 2. ☑️ dict_gen 进度条异常
-3. 处理 excel 已打开时的 PermissionError（添加相关log提示）
+3. 处理 excel 已打开时的 PermissionError（添加相关 log 提示）
 4. 全校分院系年级、分楼栋时停止异常
+5. ☑️ 一些寝室无床位信息，数据为五行，未被处理
+6. ☑️ 不生成 xslx 时 UnboundLocalError

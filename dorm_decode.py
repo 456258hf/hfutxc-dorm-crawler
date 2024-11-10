@@ -41,8 +41,8 @@ def dorm_dec(dorm: str, year_term_index: list) -> list:
     rows = soup.find_all('tr')
     for row in rows:
         cols = row.find_all('td')
-        # 排除一次成绩（四行）中的非首行，其宽1，首行宽6
-        if len(cols) != 6:
+        # 排除一次成绩（四行）中的非首行，其宽1，首行宽6或5
+        if not (len(cols) == 6 or len(cols) == 5):
             continue
         # 处理日期填入位置错误情况
         if cols[4].text != "--":
@@ -139,6 +139,7 @@ def dorms_dec(group: str, dorms: list, year_term_index: list, if_csv: bool, if_x
             writer = csv.writer(output_file)
             writer.writerows(output)
 
+    output_filename_xlsx = None
     if if_xlsx:
         # 创建Excel表格
         wb = Workbook()
